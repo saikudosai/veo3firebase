@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    // Aturan untuk data spesifik pengguna (profil, koin, karakter pribadi)
+    // Hanya pengguna yang terotentikasi yang bisa membaca/menulis datanya sendiri.
+    match /users/{userId}/{documents=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Aturan untuk koleksi 'globalCharacters'
+    // Siapa pun yang login (terotentikasi) bisa membaca koleksi ini.
+    match /globalCharacters/{characterId} {
+      allow read: if request.auth != null;
+      
+      // Hanya pengguna yang membuat karakter yang bisa menulis/mengubah/menghapusnya.
+      // Ini penting untuk mencegah pengguna lain mengubah karakter yang dibagikan.
+      allow create, update, delete: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+    }
+  }
+}
