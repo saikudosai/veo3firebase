@@ -2,18 +2,18 @@
 // File ini berisi semua fungsi untuk inisialisasi dan manajemen modal.
 // Semua kode di sini telah diperbarui ke sintaks Firebase v9.
 
-import { db, auth, storage } from './firebase.js';
+import { db, auth, storage, functions } from './firebase.js'; // --- PERBAIKAN: Impor 'functions'
 import {
     doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp,
     collection, query, getDocs, orderBy
 } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 import { ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-storage.js";
+import { httpsCallable } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-functions.js"; // --- PERBAIKAN: Impor 'httpsCallable'
 import { updateProfile, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 import { compressImage } from './utils.js';
-import { state } from './store.js';
+import { state, updateUserCoins } from './store.js';
 
 // --- Helper Umum ---
-// Fungsi ini sekarang menjadi satu-satunya cara untuk menutup modal.
 export const closeModal = () => {
     const modalContainer = document.getElementById('modal-container');
     if (modalContainer) {
@@ -24,6 +24,7 @@ export const closeModal = () => {
 
 // --- Modal Profil ---
 export function initProfileModal() {
+    // ... (kode fungsi initProfileModal Anda yang sudah ada, tidak perlu diubah)
     const user = state.currentUser;
     if (!user) return;
     
@@ -143,7 +144,7 @@ export function initProfileModal() {
 
 // --- Modal Koleksi Karakter Milik Pengguna ---
 export function initCharactersModal() {
-    
+    // ... (kode fungsi initCharactersModal Anda yang sudah ada, tidak perlu diubah)
     const handleCharacterPhotoUpload = async (e, charName, imgElement, imageContainer) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -286,12 +287,13 @@ export function initCharactersModal() {
 
 // --- Modal Koleksi Karakter Global ---
 export function initGlobalCharactersModal() {
+    
+    // --- PERBAIKAN: Definisikan Cloud Function yang bisa dipanggil ---
+    const purchaseCharacter = httpsCallable(functions, 'purchaseCharacter');
+
     const renderGlobalCharacters = (characters) => {
         const container = document.getElementById('global-character-collection-container');
-        if (!container) {
-            console.error("Elemen 'global-character-collection-container' tidak ditemukan.");
-            return;
-        }
+        if (!container) return;
 
         container.innerHTML = '';
         if (characters.length === 0) {
@@ -300,6 +302,7 @@ export function initGlobalCharactersModal() {
         }
         const grid = document.createElement('div');
         grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
+        
         characters.forEach(char => {
             const card = document.createElement('div');
             card.className = 'bg-gray-700/50 p-4 rounded-lg flex flex-col border border-gray-600';
@@ -309,24 +312,55 @@ export function initGlobalCharactersModal() {
             imgElement.src = char.illustrationUrl || 'https://placehold.co/300x300/1F2937/9CA3AF?text=No+Image';
             imgElement.className = 'w-full h-full object-cover';
             imageContainer.appendChild(imgElement);
+
             const name = document.createElement('h3');
             name.className = 'font-bold text-lg text-white truncate';
             name.textContent = char.name;
+
             const owner = document.createElement('p');
             owner.className = 'text-xs text-indigo-400 mb-2';
             owner.textContent = `Oleh: ${char.ownerName || 'Anonim'}`;
+
             const description = document.createElement('p');
             description.className = 'text-sm text-gray-400 flex-grow mb-4';
             description.textContent = char.description.substring(0, 80) + (char.description.length > 80 ? '...' : '');
-            const loadBtn = document.createElement('button');
-            loadBtn.textContent = 'Muat Karakter Ini';
-            loadBtn.className = 'w-full mt-auto text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-sm px-4 py-2';
-            loadBtn.onclick = () => {
-                document.getElementById('subjek').value = char.description;
-                document.dispatchEvent(new CustomEvent('characterLoaded'));
-                closeModal();
+            
+            const actionBtn = document.createElement('button');
+            actionBtn.textContent = 'Tambah ke Koleksi (20 Koin)';
+            actionBtn.className = 'w-full mt-auto text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-sm px-4 py-2 text-center transition-colors';
+            
+            // --- PERBAIKAN: Logika baru untuk memanggil Cloud Function ---
+            actionBtn.onclick = async () => {
+                if (char.ownerId === auth.currentUser.uid) {
+                    alert("Anda tidak bisa menambahkan karakter milik sendiri.");
+                    return;
+                }
+                if (!confirm(`Tambahkan "${char.name}" ke koleksi Anda dengan biaya 20 koin?`)) {
+                    return;
+                }
+
+                actionBtn.disabled = true;
+                actionBtn.textContent = 'Memproses...';
+
+                try {
+                    const result = await purchaseCharacter({ globalCharId: char.id });
+                    
+                    // Kurangi koin di UI secara langsung untuk respons cepat
+                    await updateUserCoins(state.coins - 20);
+                    
+                    alert(result.data.message || 'Karakter berhasil ditambahkan!');
+                
+                } catch (error) {
+                    console.error("Error purchasing character:", error);
+                    // Menampilkan pesan error yang lebih informatif dari Cloud Function
+                    alert(`Gagal: ${error.message}`);
+                } finally {
+                    actionBtn.disabled = false;
+                    actionBtn.textContent = 'Tambah ke Koleksi (20 Koin)';
+                }
             };
-            card.append(imageContainer, name, owner, description, loadBtn);
+            
+            card.append(imageContainer, name, owner, description, actionBtn);
             grid.appendChild(card);
         });
         container.appendChild(grid);
@@ -336,7 +370,8 @@ export function initGlobalCharactersModal() {
         try {
             const q = query(collection(db, 'globalCharacters'), orderBy("sharedAt", "desc"));
             const snapshot = await getDocs(q);
-            const characters = snapshot.docs.map(doc => doc.data());
+            // --- PERBAIKAN: Sertakan ID dokumen saat memetakan data ---
+            const characters = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderGlobalCharacters(characters);
         } catch (error) {
             console.error("Error fetching global characters:", error);
