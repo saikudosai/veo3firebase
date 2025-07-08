@@ -15,6 +15,11 @@
 <body class="text-gray-200">
 
     <header class="bg-gray-900/50 border-b border-gray-700/50 backdrop-blur-sm sticky top-0 z-30">
+        <script 
+             type="text/javascript"
+             src="https://app.sandbox.midtrans.com/snap/snap.js"
+             data-client-key="CLIENT_KEY_ANDA">
+         </script>
         <div class="container mx-auto max-w-5xl flex items-center justify-between p-4 relative">
              <div class="flex items-center space-x-4">
                 <!-- Tombol Menu Navigasi Baru -->
@@ -41,6 +46,7 @@
              </div>
 
              <div class="flex items-center space-x-3">
+
                  <div id="user-auth-section" class="flex items-center space-x-3">
                      <!-- Info pengguna akan muncul di sini -->
                  </div>
@@ -56,6 +62,19 @@
                     <span id="coinCount" class="font-semibold text-white">0</span>
                 </div>
                 <button id="addCoinBtn" title="Tambah 5 Koin" class="bg-green-500 hover:bg-green-600 text-white font-bold h-8 w-8 rounded-full text-lg transition-colors flex items-center justify-center shadow-lg">+</button>
+
+                <div class="relative">
+                 <button id="notificationBtn" title="Notifikasi" class="p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700">
+                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                     </svg>
+                 </button>
+                 <span id="notificationBadge" class="absolute top-1 right-1 h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                 </span>
+             </div>
+             
              </div>
              <div id="noCoinsNotification" class="absolute top-full right-4 mt-2 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg hidden">
                  Koin habis! Klik '+' untuk menambah.
