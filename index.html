@@ -9,27 +9,29 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tautan ke file CSS eksternal -->
     <link rel="stylesheet" href="style.css">
+    
+    <script 
+         type="text/javascript"
+         src="https://app.midtrans.com/snap/snap.js"
+         data-client-key="CLIENT_KEY_PRODUKSI_ANDA">
+     </script>
 </head>
 <body class="text-gray-200">
 
+    <div id="loadingScreen" class="fixed inset-0 bg-gray-900 flex justify-center items-center z-50">
+        <div class="w-16 h-16 border-4 border-t-4 border-t-indigo-500 border-gray-600 rounded-full animate-spin"></div>
+    </div>
+
     <header class="bg-gray-900/50 border-b border-gray-700/50 backdrop-blur-sm sticky top-0 z-30">
-        <script 
-             type="text/javascript"
-             src="https://app.sandbox.midtrans.com/snap/snap.js"
-             data-client-key="CLIENT_KEY_ANDA">
-         </script>
         <div class="container mx-auto max-w-5xl flex items-center justify-between p-4 relative">
              <div class="flex items-center space-x-4">
-                <!-- Tombol Menu Navigasi Baru -->
                 <div class="relative">
                     <button id="navMenuBtn" class="p-2 rounded-full hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500">
                         <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
-                    <!-- Dropdown Menu -->
                     <div id="navDropdown" class="hidden absolute left-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-700">
                         <button id="profileBtnInMenu" class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Profil</button>
                         <button id="koleksicharactersBtnInMenu" class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Koleksi Karakter</button>
@@ -45,12 +47,11 @@
                  </div>
              </div>
 
-             <div class="flex items-center space-x-3">
-
-                 <div id="user-auth-section" class="flex items-center space-x-3">
-                     <!-- Info pengguna akan muncul di sini -->
-                 </div>
-                <div class="flex items-center space-x-2 bg-gray-800 px-3 py-1.5 rounded-full border border-gray-700 shadow-lg">
+             <div class="flex items-center space-x-2 sm:space-x-3">
+                <div id="user-auth-section" class="flex-shrink-0">
+                </div>
+                
+                <div class="flex-shrink-0 flex items-center space-x-2 bg-gray-800 px-3 py-1.5 rounded-full border border-gray-700 shadow-lg h-9">
                     <span class="text-yellow-400">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                           <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -61,20 +62,20 @@
                     </span>
                     <span id="coinCount" class="font-semibold text-white">0</span>
                 </div>
-                <button id="addCoinBtn" title="Tambah 5 Koin" class="bg-green-500 hover:bg-green-600 text-white font-bold h-8 w-8 rounded-full text-lg transition-colors flex items-center justify-center shadow-lg">+</button>
-
-                <div class="relative">
-                 <button id="notificationBtn" title="Notifikasi" class="p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700">
-                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                     </svg>
-                 </button>
-                 <span id="notificationBadge" class="absolute top-1 right-1 h-3 w-3">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                 </span>
-             </div>
-             
+                
+                <button id="addCoinBtn" title="Top Up Koin" class="flex-shrink-0 bg-green-500 hover:bg-green-600 text-white font-bold h-9 w-9 rounded-full text-lg transition-colors flex items-center justify-center shadow-lg">+</button>               
+                
+                <div class="relative flex-shrink-0">
+                    <button id="notificationBtn" title="Notifikasi" class="p-2 h-9 w-9 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-gray-700">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </button>
+                    <span id="notificationBadge" class="hidden absolute top-1 right-1 h-3 w-3">
+                       <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                       <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                </div>
              </div>
              <div id="noCoinsNotification" class="absolute top-full right-4 mt-2 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg hidden">
                  Koin habis! Klik '+' untuk menambah.
@@ -83,7 +84,6 @@
         </div>
     </header>
 
-    <!-- KONTEN UTAMA APLIKASI (disembunyikan secara default) -->
     <main class="container mx-auto max-w-5xl p-4 sm:p-6 lg:p-8 hidden">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="space-y-5 bg-gray-800/50 p-6 rounded-xl border border-gray-700">
@@ -350,8 +350,7 @@
         </div>
     </main>
 
-    <!-- LAYAR LOGIN UTAMA -->
-    <div id="authScreen" class="fixed inset-0 bg-gray-900 flex justify-center items-center z-50">
+    <div id="authScreen" class="fixed inset-0 bg-gray-900 flex justify-center items-center z-50 hidden">
         <div class="bg-gray-800 text-gray-300 rounded-lg shadow-2xl p-8 w-full max-w-sm">
             <div class="text-center mb-6">
                  <h1 class="text-2xl font-bold text-white">Selamat Datang</h1>
@@ -389,7 +388,6 @@
         </div>
     </div>
 
-    <!-- Sisa Modal lainnya -->
     <div id="guideModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center z-50 hidden">
         <div class="bg-gray-800 text-gray-300 rounded-lg shadow-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
@@ -456,7 +454,6 @@
         </div>
     </div>
 
-    <!-- PERBAIKAN DI SINI: tambahkan kelas 'close-modal-btn' -->
     <div id="loadCharacterModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex justify-center items-center z-50 hidden">
         <div class="bg-gray-800 text-gray-300 rounded-lg shadow-2xl p-6 w-full max-w-lg">
             <div class="flex justify-between items-center mb-4">
@@ -478,11 +475,9 @@
         </a>
     </footer>
 
-    <!-- Kontainer untuk memuat modal secara dinamis -->
     <div id="modal-container"></div>
 
 
-    <!-- Muat file utama aplikasi Anda sebagai module -->
     <script type="module" src="js/main.js"></script>
 
 </body>

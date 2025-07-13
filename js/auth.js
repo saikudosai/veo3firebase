@@ -1,6 +1,6 @@
 // js/auth.js
 // Modul ini mengelola semua logika yang berkaitan dengan otentikasi pengguna.
-// Diperbarui untuk menjalankan callback setelah status otentikasi berubah.
+// Diperbarui untuk menangani loading screen dan menjalankan callback.
 
 import { auth, db } from './firebase.js';
 import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
@@ -12,7 +12,7 @@ import { elements, updateUserAvatarInHeader, showMainContent, showAuthScreen } f
  * Menginisialisasi listener status otentikasi Firebase.
  * @param {Function} onUserChange - Callback yang dijalankan saat status pengguna berubah.
  */
-export function initAuth(onUserChange) { // --- PERUBAHAN: Tambahkan parameter onUserChange
+export function initAuth(onUserChange) {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             setCurrentUser(user);
@@ -31,7 +31,7 @@ export function initAuth(onUserChange) { // --- PERUBAHAN: Tambahkan parameter o
                     coins: initialCoins
                 });
             } else {
-                state.coins = 5;
+                state.coins = 50;
                 await setDoc(state.userDocRef, {
                     email: user.email,
                     displayName: user.displayName,
@@ -44,14 +44,13 @@ export function initAuth(onUserChange) { // --- PERUBAHAN: Tambahkan parameter o
             
             await updateUserCoins(state.coins);
             updateUserAvatarInHeader(user);
-            showMainContent();
+            showMainContent(); // Menyembunyikan loader dan menampilkan menu utama
 
         } else {
             setCurrentUser(null);
-            showAuthScreen();
+            showAuthScreen(); // Menyembunyikan loader dan menampilkan layar login
         }
 
-        // --- PERUBAHAN: Panggil callback dengan status user saat ini ---
         if (typeof onUserChange === 'function') {
             onUserChange(user);
         }

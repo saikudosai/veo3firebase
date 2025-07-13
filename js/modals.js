@@ -1,5 +1,5 @@
 // js/modals.js
-// Perbaikan: Menambahkan 'export' pada fungsi initNotificationModal.
+// Perbaikan: Memperbaiki logika tombol "Bagikan ke Global".
 
 import { db, auth, storage, functions } from './firebase.js';
 import {
@@ -192,19 +192,20 @@ export function initCharactersModal() {
             return;
         }
         const grid = document.createElement('div');
-        grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+        grid.className = 'grid grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4';
+
         characters.forEach(char => {
             const card = document.createElement('div');
-            card.className = 'bg-gray-700/50 p-4 rounded-lg flex flex-col border border-gray-600';
+            card.className = 'bg-gray-700/50 p-2 sm:p-4 rounded-lg flex flex-col border border-gray-600';
             
             const imageContainer = document.createElement('div');
-            imageContainer.className = 'relative group w-full h-48 mb-4 bg-gray-900 rounded-md overflow-hidden';
+            imageContainer.className = 'relative group w-full h-24 sm:h-48 mb-2 sm:mb-4 bg-gray-900 rounded-md overflow-hidden';
             const imgElement = document.createElement('img');
             imgElement.src = char.illustrationUrl || 'https://placehold.co/300x300/1F2937/9CA3AF?text=No+Image';
             imgElement.className = 'w-full h-full object-cover transition-transform duration-300 group-hover:scale-110';
             const uploadLabel = document.createElement('label');
             uploadLabel.htmlFor = `upload-${char.name.replace(/\s+/g, '-')}`;
-            uploadLabel.className = 'absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white text-sm font-semibold cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity';
+            uploadLabel.className = 'absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white text-xs sm:text-sm font-semibold cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity';
             uploadLabel.textContent = 'Ganti Foto';
             const fileInput = document.createElement('input');
             fileInput.type = 'file';
@@ -215,28 +216,28 @@ export function initCharactersModal() {
             imageContainer.append(imgElement, uploadLabel, fileInput);
 
             const name = document.createElement('h3');
-            name.className = 'font-bold text-lg text-white mb-2 truncate';
+            name.className = 'font-bold text-sm sm:text-lg text-white mb-1 sm:mb-2 truncate';
             name.textContent = char.name;
             
             const description = document.createElement('p');
-            description.className = 'text-sm text-gray-400 flex-grow mb-4';
+            description.className = 'hidden sm:block text-sm text-gray-400 flex-grow mb-4';
             description.textContent = char.description.substring(0, 100) + (char.description.length > 100 ? '...' : '');
 
             const buttonGroup = document.createElement('div');
-            buttonGroup.className = 'flex flex-col space-y-2';
+            buttonGroup.className = 'flex flex-col space-y-2 mt-auto';
             const topButtonGroup = document.createElement('div');
             topButtonGroup.className = 'flex space-x-2';
             const loadBtn = document.createElement('button');
             loadBtn.textContent = 'Muat';
-            loadBtn.className = 'flex-1 text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-sm px-4 py-2 text-center';
+            loadBtn.className = 'flex-1 text-white bg-indigo-600 hover:bg-indigo-700 font-medium rounded-lg text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2 text-center';
             loadBtn.onclick = () => {
                 document.getElementById('subjek').value = char.description;
                 document.dispatchEvent(new CustomEvent('characterLoaded'));
                 closeModal();
             };
             const deleteBtn = document.createElement('button');
-            deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/><path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/></svg>`;
-            deleteBtn.className = 'p-2 text-white bg-red-600 hover:bg-red-700 font-medium rounded-lg';
+            deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/><path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/></svg>`;
+            deleteBtn.className = 'p-1 sm:p-2 text-white bg-red-600 hover:bg-red-700 font-medium rounded-lg';
             deleteBtn.onclick = async () => {
                 if (confirm(`Yakin ingin menghapus "${char.name}"?`)) {
                     await deleteDoc(doc(db, 'users', auth.currentUser.uid, 'characters', char.name));
@@ -246,19 +247,38 @@ export function initCharactersModal() {
             topButtonGroup.append(loadBtn, deleteBtn);
 
             const shareBtn = document.createElement('button');
-            shareBtn.textContent = 'Bagikan ke Global';
-            shareBtn.className = 'w-full text-white bg-teal-600 hover:bg-teal-700 font-medium rounded-lg text-sm px-4 py-2';
+            shareBtn.textContent = 'Bagikan';
+            shareBtn.className = 'w-full text-white bg-teal-600 hover:bg-teal-700 font-medium rounded-lg text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2';
+            
+            // --- PERBAIKAN LOGIKA TOMBOL BAGIKAN ---
             shareBtn.onclick = async () => {
                 if (confirm(`Bagikan karakter "${char.name}" ke koleksi global?`)) {
-                    const globalCharData = {
-                        ...char,
-                        ownerId: auth.currentUser.uid,
-                        ownerName: auth.currentUser.displayName || 'Anonim',
-                        sharedAt: serverTimestamp()
-                    };
-                    const globalDocId = `${char.name.replace(/\s+/g, '_')}_${auth.currentUser.uid}`;
-                    await setDoc(doc(db, 'globalCharacters', globalDocId), globalCharData);
-                    alert('Karakter berhasil dibagikan!');
+                    shareBtn.disabled = true;
+                    shareBtn.textContent = 'Membagikan...';
+                    try {
+                        const globalCharData = {
+                            name: char.name,
+                            description: char.description,
+                            illustrationUrl: char.illustrationUrl || null,
+                            ownerId: auth.currentUser.uid,
+                            ownerName: auth.currentUser.displayName || 'Anonim',
+                            sharedAt: serverTimestamp(),
+                            likeCount: 0,
+                            dislikeCount: 0,
+                            copyCount: 0,
+                            likes: {},
+                            dislikes: {}
+                        };
+                        const globalDocId = `${char.name.replace(/\s+/g, '_')}_${auth.currentUser.uid}`;
+                        await setDoc(doc(db, 'globalCharacters', globalDocId), globalCharData);
+                        alert('Karakter berhasil dibagikan!');
+                    } catch(error) {
+                        console.error("Gagal membagikan karakter:", error);
+                        alert("Gagal membagikan karakter. Silakan coba lagi.");
+                    } finally {
+                        shareBtn.disabled = false;
+                        shareBtn.textContent = 'Bagikan';
+                    }
                 }
             };
 
@@ -268,7 +288,7 @@ export function initCharactersModal() {
         });
         container.appendChild(grid);
     };
-
+    
     const fetchAndRenderCharacters = async () => {
         const charactersCollectionRef = collection(db, 'users', auth.currentUser.uid, 'characters');
         const q = query(charactersCollectionRef, orderBy("createdAt", "desc"));
@@ -295,35 +315,35 @@ export function initGlobalCharactersModal() {
             return;
         }
         const grid = document.createElement('div');
-        grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
+        grid.className = 'grid grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4';
         
         const currentUserId = auth.currentUser.uid;
 
         characters.forEach(char => {
             const card = document.createElement('div');
-            card.className = 'bg-gray-700/50 p-4 rounded-lg flex flex-col border border-gray-600';
+            card.className = 'bg-gray-700/50 p-2 sm:p-4 rounded-lg flex flex-col border border-gray-600';
             
             const imageContainer = document.createElement('div');
-            imageContainer.className = 'w-full h-48 mb-4 bg-gray-900 rounded-md overflow-hidden';
+            imageContainer.className = 'w-full h-24 sm:h-48 mb-2 sm:mb-4 bg-gray-900 rounded-md overflow-hidden';
             const imgElement = document.createElement('img');
             imgElement.src = char.illustrationUrl || 'https://placehold.co/300x300/1F2937/9CA3AF?text=No+Image';
             imgElement.className = 'w-full h-full object-cover';
             imageContainer.appendChild(imgElement);
 
             const name = document.createElement('h3');
-            name.className = 'font-bold text-lg text-white truncate';
+            name.className = 'font-bold text-sm sm:text-lg text-white truncate';
             name.textContent = char.name;
 
             const owner = document.createElement('p');
-            owner.className = 'text-xs text-indigo-400 mb-2';
+            owner.className = 'text-xs text-indigo-400 mb-1 sm:mb-2 truncate';
             owner.textContent = `Oleh: ${char.ownerName || 'Anonim'}`;
 
             const description = document.createElement('p');
-            description.className = 'text-sm text-gray-400 flex-grow mb-4';
+            description.className = 'hidden sm:block text-sm text-gray-400 flex-grow mb-4';
             description.textContent = char.description.substring(0, 80) + (char.description.length > 80 ? '...' : '');
             
             const statsContainer = document.createElement('div');
-            statsContainer.className = 'flex items-center justify-start space-x-4 text-xs text-gray-400 mb-3 mt-auto pt-3 border-t border-gray-600';
+            statsContainer.className = 'flex items-center justify-start space-x-2 sm:space-x-4 text-xs text-gray-400 mb-3 mt-auto pt-3 border-t border-gray-600';
 
             const likeButton = document.createElement('button');
             const dislikeButton = document.createElement('button');

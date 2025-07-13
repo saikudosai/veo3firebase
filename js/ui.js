@@ -1,9 +1,11 @@
 // js/ui.js
 // Modul ini bertanggung jawab untuk semua manipulasi DOM dan interaksi UI
 // yang bersifat umum dan tidak terikat pada fitur spesifik.
+// Ditambahkan elemen loadingScreen.
 
 // --- UI ELEMENTS CACHE ---
 export const elements = {
+    loadingScreen: document.getElementById('loadingScreen'), // <-- TAMBAHAN
     mainContent: document.querySelector('main'),
     authScreen: document.getElementById('authScreen'),
     authForm: document.getElementById('authForm'),
@@ -98,11 +100,6 @@ export function openInGemini(textarea, button) {
     window.open(geminiUrl, '_blank');
 }
 
-/**
- * Menonaktifkan atau mengaktifkan semua tombol aksi utama.
- * Fungsi ini sekarang lebih "bodoh" dan hanya melakukan apa yang diperintahkan.
- * @param {boolean} disabled - Status disabled.
- */
 export function setActionsDisabled(disabled) {
     const actionButtons = [
         elements.generateBtn, elements.describeSubjectBtn, elements.describePlaceBtn,
@@ -112,9 +109,6 @@ export function setActionsDisabled(disabled) {
         if (btn) btn.disabled = disabled;
     });
 }
-
-// --- PERBAIKAN: Fungsi updateButtonState telah dihapus dari sini ---
-// Logikanya telah dipindahkan ke store.js untuk menyelesaikan error.
 
 export function showNoCoinsNotification() {
     if (elements.noCoinsNotification) {
@@ -149,16 +143,20 @@ export function updateUserAvatarInHeader(user) {
     }
 }
 
+// --- PERUBAHAN: Fungsi diperbarui untuk menangani loading screen ---
 export function showMainContent() {
+    if (elements.loadingScreen) elements.loadingScreen.classList.add('hidden');
     if (elements.mainContent) elements.mainContent.classList.remove('hidden');
     if (elements.authScreen) elements.authScreen.classList.add('hidden');
 }
 
 export function showAuthScreen() {
+    if (elements.loadingScreen) elements.loadingScreen.classList.add('hidden');
     if (elements.mainContent) elements.mainContent.classList.add('hidden');
     if (elements.authScreen) elements.authScreen.classList.remove('hidden');
     if (elements.userAuthSection) elements.userAuthSection.innerHTML = '';
 }
+// --- AKHIR PERUBAHAN ---
 
 export async function openModal(htmlFile, initFunction, ...args) {
     try {

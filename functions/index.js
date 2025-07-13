@@ -1,5 +1,5 @@
 // functions/index.js
-// Perbaikan: Memperbaiki logika update field Map (likes/dislikes) di dalam transaksi Firestore.
+// Perbaikan: Menghapus filter pembayaran untuk menampilkan semua metode yang aktif.
 
 const functions = require("firebase-functions/v2");
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
@@ -119,7 +119,6 @@ exports.purchaseCharacter = onCall(async (request) => {
     }
 });
 
-// --- FUNGSI VOTE YANG DIPERBAIKI ---
 exports.voteOnCharacter = onCall(async (request) => {
     const { globalCharId, voteType } = request.data;
     const userId = request.auth?.uid;
@@ -132,65 +131,58 @@ exports.voteOnCharacter = onCall(async (request) => {
     }
 
     const charRef = db.collection("globalCharacters").doc(globalCharId);
-    const voterRef = db.collection('users').doc(userId);
     
     try {
         await db.runTransaction(async (t) => {
-            const charDoc = await t.get(charRef);
-            if (!charDoc.exists) {
+            const doc = await t.get(charRef);
+            if (!doc.exists) {
                 throw new HttpsError("not-found", "Karakter tidak ditemukan.");
             }
-            const voterDoc = await t.get(voterRef);
 
-            const data = charDoc.data();
-            let likeCount = data.likeCount || 0;
-            let dislikeCount = data.dislikeCount || 0;
-            const likes = data.likes || {};
-            const dislikes = data.dislikes || {};
-
-            const hasLiked = likes[userId] === true;
-            const hasDisliked = dislikes[userId] === true;
+            const data = doc.data();
+            const hasLiked = data.likes && data.likes[userId];
+            const hasDisliked = data.dislikes && data.dislikes[userId];
+            
+            const updates = {};
             let message = '';
+            
+            const likeFieldPath = `likes.${userId}`;
+            const dislikeFieldPath = `dislikes.${userId}`;
 
             if (voteType === 'like') {
                 if (hasLiked) {
-                    delete likes[userId];
-                    likeCount--;
+                    updates[likeFieldPath] = FieldValue.delete();
+                    updates.likeCount = FieldValue.increment(-1);
                 } else {
-                    likes[userId] = true;
-                    likeCount++;
+                    updates[likeFieldPath] = true;
+                    updates.likeCount = FieldValue.increment(1);
                     message = `menyukai karakter "${data.name}" Anda.`;
                     if (hasDisliked) {
-                        delete dislikes[userId];
-                        dislikeCount--;
+                        updates[dislikeFieldPath] = FieldValue.delete();
+                        updates.dislikeCount = FieldValue.increment(-1);
                     }
                 }
             } else if (voteType === 'dislike') {
                 if (hasDisliked) {
-                    delete dislikes[userId];
-                    dislikeCount--;
+                    updates[dislikeFieldPath] = FieldValue.delete();
+                    updates.dislikeCount = FieldValue.increment(-1);
                 } else {
-                    dislikes[userId] = true;
-                    dislikeCount++;
+                    updates[dislikeFieldPath] = true;
+                    updates.dislikeCount = FieldValue.increment(1);
                     message = `tidak menyukai karakter "${data.name}" Anda.`;
                     if (hasLiked) {
-                        delete likes[userId];
-                        likeCount--;
+                        updates[likeFieldPath] = FieldValue.delete();
+                        updates.likeCount = FieldValue.increment(-1);
                     }
                 }
             }
             
-            t.update(charRef, {
-                likes: likes,
-                dislikes: dislikes,
-                likeCount: likeCount,
-                dislikeCount: dislikeCount
-            });
+            t.update(charRef, updates);
 
             const ownerId = data.ownerId;
-            if (ownerId !== userId && message) {
-                // --- PERBAIKAN DI SINI ---
-                const voterName = voterDoc.exists && voterDoc.data().displayName ? voterDoc.data().displayName : 'Seseorang';
+            if(ownerId !== userId && message) {
+                const voterDoc = await t.get(db.collection('users').doc(userId));
+                const voterName = voterDoc.exists() ? voterDoc.data().displayName : 'Seseorang';
                 const ownerNotifRef = db.collection('users').doc(ownerId).collection('notifications').doc();
                 
                 t.set(ownerNotifRef, {
@@ -210,9 +202,6 @@ exports.voteOnCharacter = onCall(async (request) => {
     }
 });
 
-
-
-
 exports.createTopUpTransaction = onCall({ secrets: [midtransServerKey, midtransClientKey] }, async (request) => {
     const userId = request.auth?.uid;
     if (!userId) {
@@ -225,7 +214,7 @@ exports.createTopUpTransaction = onCall({ secrets: [midtransServerKey, midtransC
     }
     
     const snap = new midtransClient.Snap({
-        isProduction: false,
+        isProduction: true,
         serverKey: midtransServerKey.value(),
         clientKey: midtransClientKey.value()
     });
@@ -243,6 +232,7 @@ exports.createTopUpTransaction = onCall({ secrets: [midtransServerKey, midtransC
         "transaction_details": { "order_id": orderId, "gross_amount": amount },
         "customer_details": { "first_name": request.auth.token.name || "Pengguna", "email": request.auth.token.email },
         "item_details": [{ "id": `coins-${coins}`, "price": amount, "quantity": 1, "name": `${coins.toLocaleString('id-ID')} Koin` }]
+        // Baris "enabled_payments" dihapus untuk menampilkan semua metode
     };
 
     try {
@@ -257,7 +247,7 @@ exports.createTopUpTransaction = onCall({ secrets: [midtransServerKey, midtransC
 exports.handlePaymentNotification = functions.https.onRequest({ secrets: [midtransServerKey, midtransClientKey] }, async (req, res) => {
     
     const core = new midtransClient.CoreApi({
-        isProduction: false,
+        isProduction: true,
         serverKey: midtransServerKey.value(),
         clientKey: midtransClientKey.value()
     });
