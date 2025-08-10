@@ -1,5 +1,5 @@
 // functions/index.js
-// Perbaikan: Menghapus filter pembayaran untuk menampilkan semua metode yang aktif.
+// Perbaikan: Menyusun ulang operasi baca dan tulis di dalam transaksi.
 
 const functions = require("firebase-functions/v2");
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
@@ -119,6 +119,7 @@ exports.purchaseCharacter = onCall(async (request) => {
     }
 });
 
+// --- FUNGSI VOTE YANG DIPERBAIKI ---
 exports.voteOnCharacter = onCall(async (request) => {
     const { globalCharId, voteType } = request.data;
     const userId = request.auth?.uid;
@@ -131,58 +132,67 @@ exports.voteOnCharacter = onCall(async (request) => {
     }
 
     const charRef = db.collection("globalCharacters").doc(globalCharId);
+    const voterRef = db.collection('users').doc(userId);
     
     try {
         await db.runTransaction(async (t) => {
-            const doc = await t.get(charRef);
-            if (!doc.exists) {
+            // --- TAHAP BACA (READS) ---
+            const charDoc = await t.get(charRef);
+            if (!charDoc.exists) {
                 throw new HttpsError("not-found", "Karakter tidak ditemukan.");
             }
+            const voterDoc = await t.get(voterRef);
 
-            const data = doc.data();
-            const hasLiked = data.likes && data.likes[userId];
-            const hasDisliked = data.dislikes && data.dislikes[userId];
-            
-            const updates = {};
+            // --- TAHAP LOGIKA & PERSIAPAN TULIS (WRITES) ---
+            const data = charDoc.data();
+            let likeCount = data.likeCount || 0;
+            let dislikeCount = data.dislikeCount || 0;
+            const likes = data.likes || {};
+            const dislikes = data.dislikes || {};
+
+            const hasLiked = likes[userId] === true;
+            const hasDisliked = dislikes[userId] === true;
             let message = '';
-            
-            const likeFieldPath = `likes.${userId}`;
-            const dislikeFieldPath = `dislikes.${userId}`;
 
             if (voteType === 'like') {
                 if (hasLiked) {
-                    updates[likeFieldPath] = FieldValue.delete();
-                    updates.likeCount = FieldValue.increment(-1);
+                    delete likes[userId];
+                    likeCount--;
                 } else {
-                    updates[likeFieldPath] = true;
-                    updates.likeCount = FieldValue.increment(1);
+                    likes[userId] = true;
+                    likeCount++;
                     message = `menyukai karakter "${data.name}" Anda.`;
                     if (hasDisliked) {
-                        updates[dislikeFieldPath] = FieldValue.delete();
-                        updates.dislikeCount = FieldValue.increment(-1);
+                        delete dislikes[userId];
+                        dislikeCount--;
                     }
                 }
             } else if (voteType === 'dislike') {
                 if (hasDisliked) {
-                    updates[dislikeFieldPath] = FieldValue.delete();
-                    updates.dislikeCount = FieldValue.increment(-1);
+                    delete dislikes[userId];
+                    dislikeCount--;
                 } else {
-                    updates[dislikeFieldPath] = true;
-                    updates.dislikeCount = FieldValue.increment(1);
+                    dislikes[userId] = true;
+                    dislikeCount++;
                     message = `tidak menyukai karakter "${data.name}" Anda.`;
                     if (hasLiked) {
-                        updates[likeFieldPath] = FieldValue.delete();
-                        updates.likeCount = FieldValue.increment(-1);
+                        delete likes[userId];
+                        likeCount--;
                     }
                 }
             }
             
-            t.update(charRef, updates);
+            // --- TAHAP TULIS (WRITES) ---
+            t.update(charRef, {
+                likes: likes,
+                dislikes: dislikes,
+                likeCount: likeCount,
+                dislikeCount: dislikeCount
+            });
 
             const ownerId = data.ownerId;
-            if(ownerId !== userId && message) {
-                const voterDoc = await t.get(db.collection('users').doc(userId));
-                const voterName = voterDoc.exists() ? voterDoc.data().displayName : 'Seseorang';
+            if (ownerId !== userId && message) {
+                const voterName = voterDoc.exists ? voterDoc.data().displayName : 'Seseorang';
                 const ownerNotifRef = db.collection('users').doc(ownerId).collection('notifications').doc();
                 
                 t.set(ownerNotifRef, {
@@ -232,7 +242,6 @@ exports.createTopUpTransaction = onCall({ secrets: [midtransServerKey, midtransC
         "transaction_details": { "order_id": orderId, "gross_amount": amount },
         "customer_details": { "first_name": request.auth.token.name || "Pengguna", "email": request.auth.token.email },
         "item_details": [{ "id": `coins-${coins}`, "price": amount, "quantity": 1, "name": `${coins.toLocaleString('id-ID')} Koin` }]
-        // Baris "enabled_payments" dihapus untuk menampilkan semua metode
     };
 
     try {

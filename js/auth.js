@@ -31,7 +31,7 @@ export function initAuth(onUserChange) {
                     coins: initialCoins
                 });
             } else {
-                state.coins = 50;
+                state.coins = 30;
                 await setDoc(state.userDocRef, {
                     email: user.email,
                     displayName: user.displayName,

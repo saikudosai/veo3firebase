@@ -1,5 +1,9 @@
 {
   "projects": {
-    "default": "veo3fire-app"
-  }
+    "default": "veo3fire-app",
+    "production": "veo3fire-app",
+    "development": "veo3fire-dev"
+  },
+  "targets": {},
+  "etags": {}
 }
